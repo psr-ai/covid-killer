@@ -41,7 +41,7 @@ func generateOTP() {
   fmt.Println("Transaction ID:", transactionID)
 }
 
-func confirmOTP(otp string) {
+func confirmOTP(otp string) string {
   body, _ := json.Marshal(map[string]string{
       "otp":  encodeOTP(otp),
       "txnId": transactionID,
@@ -58,10 +58,12 @@ func confirmOTP(otp string) {
     fmt.Println("An error occured while reading the response of confirmOTP")
     panic(err)
   }
+  log.Println(string([]byte(readBody)))
   var decodedResp map[string]string
   json.Unmarshal(readBody, &decodedResp)
   token = decodedResp["token"]
-  fmt.Println("Authentication successful. Token:", token, decodedResp)
+  fmt.Println("Authentication successful. Token:", token)
+  return token
 }
 
 func encodeOTP(otp string) string {
@@ -70,9 +72,11 @@ func encodeOTP(otp string) string {
 }
 
 func calendarByDistrict(districtID string, date string) {
-  params := "?district_id=" + districtID + "&date=" + date + "&Accept-Language=en_US"
-  req, err := http.NewRequest("GET", API_URL + "/v2/appointment/sessions/public/calendarByDistrict" + params, nil)
-  bearer := "Bearer " + token
+  params := "?district_id=" + districtID + "&date=" + date
+  url := API_URL + "/v2/appointment/sessions/public/calendarByDistrict" + params
+  fmt.Println("Calling URL:", url)
+  req, err := http.NewRequest("GET", url, nil)
+  bearer := "bearer " + token
   req.Header.Add("Authorization", bearer)
   client := &http.Client{}
   resp, err := client.Do(req)
@@ -100,6 +104,27 @@ func calendarByDistrict(districtID string, date string) {
     }
   }
 }
+
+func getCall(url string, bearer string) {
+  req, _ := http.NewRequest("GET", url, nil)
+  req.Header.Add("Authorization", "Bearer " + token)
+  client := &http.Client{}
+  resp, err := client.Do(req)
+
+  if err != nil {
+    log.Fatalln("Error while making request " + url)
+  }
+
+  defer resp.Body.Close()
+  body, err := ioutil.ReadAll(resp.Body)
+  log.Println(string([]byte(body)))
+}
+
+func createURL(districtID string, date string) string {
+  params := "?district_id=" + districtID + "&date=" + date
+  return API_URL + "/v2/appointment/sessions/public/calendarByDistrict" + params
+}
+
 
 type Session struct {
   SessionID int32 `json:"session_id"`
@@ -137,12 +162,13 @@ func main() {
   fmt.Println("Please enter the OTP received on your phone:")
   var otp string
   fmt.Scanln(&otp)
-  confirmOTP(otp)
+  x := confirmOTP(otp)
   var districtID string
   var date string
   fmt.Println("Please enter the district ID:")
   fmt.Scanln(&districtID)
   fmt.Println("Please enter the starting date of the week you want to check for:")
   fmt.Scanln(&date)
-  calendarByDistrict(districtID, date)
+  fmt.Println("Get Bearer", x)
+  getCall(createURL(districtID, date), x)
 }
