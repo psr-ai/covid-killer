@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {calendarByDistrict, getDistricts, getStates} from "./apiCovin";
-import SlotsTable from "./SlotsTable";
+import DataTable from "./DataTable";
 
 class Dashboard extends React.Component {
 
@@ -15,7 +15,9 @@ class Dashboard extends React.Component {
         districts: [],
         selectedDistrict: '',
         interval: 1,
-        startDate: (new Date()).toISOString().split('T')[0]
+        startDate: (new Date()).toISOString().split('T')[0],
+        centers: [],
+        executing: false
     }
 
     componentDidMount() {
@@ -46,15 +48,52 @@ class Dashboard extends React.Component {
         })
     }
 
-    onExecute = () => {
+    startInterval = () => {
+        this.executor = setInterval(this.executorMethod, this.state.interval * 1000);
+        this.setState({
+            executing: true
+        })
+    }
+
+    stopInterval = () => {
+        clearInterval(this.executor);
+        this.setState({
+            executing: false
+        })
+    }
+
+    executorMethod = () => {
         const date = new Date(this.state.startDate)
         const formattedDate = ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate())) + '-' + ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1))) + '-' + date.getFullYear();
         calendarByDistrict(this.state.selectedDistrict, formattedDate).then(data => {
-            console.log('data', data)
+            const availabilityAt = Date.now();
+            const processedData = []
+            data['centers'].forEach(row => {
+                row.sessions.forEach(session => {
+                    processedData.push({
+                        id: row.center_id.toString() + session.session_id.toString() + availabilityAt.toString(),
+                        availability_at: availabilityAt,
+                        ...session,
+                        ...row
+                    })
+                })
+            })
+            this.setState({
+                centers: this.state.centers.concat(processedData)
+            })
         }).catch(error => {
-            console.log('error', error.response)
+            console.log('error', error)
             this.props.onError();
         })
+    }
+
+
+    onExecute = () => {
+        this.startInterval()
+    }
+
+    onStop = () => {
+        this.stopInterval()
     }
 
     onDateChange = (event) => {
@@ -107,10 +146,11 @@ class Dashboard extends React.Component {
                                title={'Interval'}/>
                         <span>&nbsp;second{this.state.interval > 1 ? 's' : ''}.</span>
                     </div>
-                    <button onClick={this.onExecute}>Execute</button>
+                    <button disabled={this.state.executing} onClick={this.onExecute}>{this.state.executing ? `Executing every ${this.state.interval} seconds...` : 'Execute'}</button>
+                    {this.state.executing ? <button onClick={this.onStop}>Stop</button> : null}
                 </div>
                 <div>
-                    <SlotsTable />
+                    <DataTable rows={this.state.centers} />
                 </div>
             </div>
         );
