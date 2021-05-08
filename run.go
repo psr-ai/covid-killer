@@ -10,12 +10,15 @@ import (
   "crypto/sha256"
   "encoding/hex"
   "log"
+  "time"
+  "os/exec"
 )
 
 var API_URL string = os.Getenv("API_URL")
 var PHONE string = os.Getenv("PHONE")
 
 var transactionID string
+var done = make(chan bool)
 var token string
 
 func generateOTP() {
@@ -88,16 +91,22 @@ func calendarByDistrict(districtID string, date string) {
   if err != nil {
     log.Println("Error while reading the response bytes:", err)
   }
-  log.Println(string([]byte(body)))
+  //log.Println(string([]byte(body)))
+  if (resp.StatusCode >= 300 || resp.StatusCode < 200) {
+    log.Println(string([]byte(body)))
+    errorMessage := fmt.Sprintf("Authorization required, StatusCode: %v", resp.StatusCode)
+    panic(errorMessage)
+  }
   var response CalendarResponse
   json.Unmarshal(body, &response)
-  fmt.Println(response)
   centers := response.Centers
+  fmt.Println("Total centers:", len(centers))
   for _, center := range centers {
-    if (center.sessions != nil) {
-      for _, session := range center.sessions {
-        if (session.MinAgeLimit >= 18 && session.AvailableCapacity > 0) {
-          fmt.Printf("%s slot available at %s", session.AvailableCapacity, center.Name)
+    if (center.Sessions != nil) {
+      for _, session := range center.Sessions {
+        if (session.MinAgeLimit >= 18 && session.MinAgeLimit < 45 && session.AvailableCapacity > 0) {
+          exec.Command("say", "slot found").Output()
+          fmt.Printf("%v slot available at %v", session.AvailableCapacity, center.Name)
           fmt.Printf("More details about the center: %+v\n", center)
         }
       }
@@ -150,11 +159,31 @@ type Centers struct {
   From string `json:"from"`
   To string `json:"to"`
   FeeType string `json:"fee_type"`
-  sessions []Session `json:"sessions"`
+  Sessions []Session `json:"sessions"`
 }
 
 type CalendarResponse struct {
   Centers []Centers `json:"centers"`
+}
+
+func runEvery(seconds int, params map[string]string) {
+  ticker := time.NewTicker(time.Duration(seconds) * time.Second)
+  defer ticker.Stop()
+  go func() {
+		time.Sleep(900 * time.Second)
+		done <- true
+	}()
+
+  for {
+		select {
+		case <-done:
+			fmt.Println("Done!")
+			return
+		case t := <-ticker.C:
+      fmt.Println(t)
+      calendarByDistrict(params["districtID"], params["date"])
+		}
+	}
 }
 
 func main() {
@@ -169,6 +198,9 @@ func main() {
   fmt.Scanln(&districtID)
   fmt.Println("Please enter the starting date of the week you want to check for:")
   fmt.Scanln(&date)
-  fmt.Println("Get Bearer", x)
   getCall(createURL(districtID, date), x)
+  //m := make(map[string]string)
+  //m["districtID"] = districtID
+  //m["date"] = date
+  //runEvery(1, m)
 }
