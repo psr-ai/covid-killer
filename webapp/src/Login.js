@@ -61,9 +61,10 @@ export default class Login extends React.Component {
                     error: null
                 })
             }).catch(error => {
-                localStorage.setItem('token', null);
+                console.log('error response', error.response)
+                localStorage.setItem('token', '');
                 this.setState({
-                    error: error.response.data,
+                    error: error.response.data.error,
                     OTPSent: false
                 })
             })

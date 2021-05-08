@@ -82,7 +82,7 @@ class Dashboard extends React.Component {
                 centers: this.state.centers.concat(processedData)
             })
         }).catch(error => {
-            console.log('error', error)
+            localStorage.setItem('token', '')
             this.props.onError();
         })
     }

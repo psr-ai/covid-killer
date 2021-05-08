@@ -7,23 +7,14 @@ import {
 import {
     Grid,
     VirtualTable, TableHeaderRow, TableFilterRow, TableSelection, TableGroupRow,
-    GroupingPanel, DragDropProvider, TableColumnReordering, Toolbar, SearchPanel,
-    TableColumnResizing
+    GroupingPanel, DragDropProvider, TableColumnReordering, Toolbar, SearchPanel
 } from '@devexpress/dx-react-grid-material-ui';
 
 
 import {ProgressBarCell} from './theme-sources/progress-bar-cell';
 import {HighlightedCell} from './theme-sources/highlighted-cell';
-import {CurrencyTypeProvider} from './theme-sources/currency-type-provider';
-import {PercentTypeProvider} from './theme-sources/percent-type-provider';
-import {BooleanTypeProvider} from './theme-sources/boolean-type-provider';
 import {IntegerTypeProvider} from "./theme-sources/integer-type-provider";
 import {DateTypeProvider} from "./theme-sources/date-type-provider";
-
-import {
-    generateRows,
-    globalSalesValues,
-} from './demo-data/generator';
 
 const Cell = (props) => {
     const {column} = props;
@@ -38,7 +29,7 @@ const Cell = (props) => {
 
 const getRowId = row => row.id;
 
-export default ({rows}) => {
+const DataTable = ({rows}) => {
     const [columns] = useState([
         {name: 'availability_at', title: 'Availability At'},
         {name: 'name', title: 'Center Name'},
@@ -114,3 +105,5 @@ export default ({rows}) => {
         </Paper>
     );
 };
+
+export default DataTable;
