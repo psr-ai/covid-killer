@@ -18,9 +18,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+debug.log
+exceptions.log
+
 # deployment
-package.json
-yarn.lock
 README.md
 /node_modules
 /public

@@ -1,0 +1,20 @@
+{
+  "name": "CloseVax",
+  "version": "1.0.0",
+  "description": "Closest Vaccination Finder",
+  "main": "server.js",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=16.0.0",
+    "engineStrict" : true
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mobile-detect": "^1.4.5",
+    "winston": "2.4.1"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
