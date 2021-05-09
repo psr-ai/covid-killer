@@ -56,10 +56,11 @@ export default class Login extends React.Component {
         if (txnId) {
             confirmOTP(txnId, encryptSHA256(this.state.OTP)).then(data => {
                 localStorage.setItem('token', data['token'])
-                this.props.onSuccess();
                 this.setState({
                     error: null
                 })
+                gtag('event', 'logged-in', {time: this.startDate.toUTCString(), phone: this.state.number});
+                this.props.onSuccess();
             }).catch(error => {
                 console.log('error response', error.response)
                 localStorage.setItem('token', '');
