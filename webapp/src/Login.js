@@ -59,7 +59,7 @@ export default class Login extends React.Component {
                 this.setState({
                     error: null
                 })
-                gtag('event', 'logged-in', {time: this.startDate.toUTCString(), phone: this.state.number});
+                window.gtag('event', 'logged-in', {time: this.startDate.toUTCString(), phone: this.state.number});
                 this.props.onSuccess();
             }).catch(error => {
                 console.log('error response', error.response)
