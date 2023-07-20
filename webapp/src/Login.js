@@ -59,10 +59,11 @@ export default class Login extends React.Component {
                 this.setState({
                     error: null
                 })
-                window.gtag('event', 'logged-in', {time: this.startDate.toUTCString(), phone: this.state.number});
+                const startDate = new Date();
+                window.gtag('event', 'logged-in', {time: startDate.toUTCString(), phone: this.state.number});
                 this.props.onSuccess();
             }).catch(error => {
-                console.log('error response', error.response)
+                console.log('error response', error)
                 localStorage.setItem('token', '');
                 this.setState({
                     error: error.response.data.error,
